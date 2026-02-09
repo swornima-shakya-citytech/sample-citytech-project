@@ -1,47 +1,67 @@
+import requests
 import random
-import datetime
-import json
+import string
 
-# Generate dummy data for GitHub issues, pull requests, labels, milestones, and assignees
+# Configuration for GitHub API
+GITHUB_API_URL = 'https://api.github.com'
+REPO_OWNER = 'swornima-shakya-citytech'
+REPO_NAME = 'sample-citytech-project'
 
-def generate_dummy_data(num_issues=50, num_prs=25, num_labels=10, num_milestones=5, num_assignees=5):
-    issues = []
-    pull_requests = []
-    labels = [f"Label {i+1}" for i in range(num_labels)]
-    milestones = [f"Milestone {i+1}" for i in range(num_milestones)]
-    assignees = [f"User {i+1}" for i in range(num_assignees)]
+# Function to generate random string
+def random_string(length=10):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-    # Generate issues
-    for i in range(num_issues):
-        created_at = datetime.datetime.utcnow() - datetime.timedelta(days=random.randint(1, 30))
-        issues.append({
-            "issue_number": i + 1,
-            "title": f"Issue {i + 1} Title",
-            "body": f"Detailed description for issue {i + 1}.",
-            "created_at": created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "updated_at": created_at + datetime.timedelta(days=random.randint(1, 10)).strftime('%Y-%m-%d %H:%M:%S'),
-            "closed_at": (created_at + datetime.timedelta(days=random.randint(1, 30)).strftime('%Y-%m-%d %H:%M:%S')),
-            "labels": random.sample(labels, k=random.randint(1, 3)),
-            "assignees": random.sample(assignees, k=random.randint(1, 2)),
-            "milestone": random.choice(milestones)
+# Function to create dummy issues
+def create_dummy_issues(num_issues):
+    for _ in range(num_issues):
+        issue_title = f'Issue {random_string()}'
+        issue_body = f'This is a dummy issue for testing purposes.'
+        requests.post(f'{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/issues', json={
+            'title': issue_title,
+            'body': issue_body
         })
 
-    # Generate pull requests
-    for i in range(num_prs):
-        created_at = datetime.datetime.utcnow() - datetime.timedelta(days=random.randint(1, 30))
-        pull_requests.append({
-            "pr_number": i + 1,
-            "title": f"PR {i + 1} Title",
-            "body": f"Detailed description for pull request {i + 1}.",
-            "created_at": created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "merged_at": (created_at + datetime.timedelta(days=random.randint(0, 10))).strftime('%Y-%m-%d %H:%M:%S'),
-            "labels": random.sample(labels, k=random.randint(1, 3)),
-            "assignees": random.sample(assignees, k=random.randint(1, 2)),
-            "milestone": random.choice(milestones)
+# Function to create dummy PRs
+def create_dummy_prs(num_prs):
+    for _ in range(num_prs):
+        pr_title = f'PR {random_string()}'
+        pr_body = f'This is a dummy PR for testing purposes.'
+        requests.post(f'{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/pulls', json={
+            'title': pr_title,
+            'body': pr_body,
+            'head': 'feature-branch',
+            'base': 'main'
         })
 
-    return json.dumps({"issues": issues, "pull_requests": pull_requests}, indent=4)
+# Function to create dummy labels
+def create_dummy_labels():
+    labels = ['bug', 'feature', 'documentation', 'enhancement']
+    for label in labels:
+        requests.post(f'{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/labels', json={
+            'name': label,
+            'color': random_string(6)
+        })
 
+# Function to create dummy milestones
+def create_dummy_milestones():
+    for _ in range(5):
+        milestone_title = f'Milestone {random_string()}'
+        requests.post(f'{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/milestones', json={
+            'title': milestone_title
+        })
+
+# Function to assign random assignees
+def assign_dummy_assignees(num_assignees):
+    for _ in range(num_assignees):
+        assignee = random_string()  # Replace with actual GitHub usernames
+        requests.post(f'{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/issues/1/assignees', json={
+            'assignees': [assignee]
+        })
+
+# Main execution
 if __name__ == '__main__':
-    dummy_data = generate_dummy_data()
-    print(dummy_data)
+    create_dummy_issues(50)
+    create_dummy_prs(25)
+    create_dummy_labels()
+    create_dummy_milestones()
+    assign_dummy_assignees(5)
